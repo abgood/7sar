@@ -20,4 +20,11 @@
 
 #define W_SPACE " \t\r\n"
 
+enum {
+    HIDE_BIT,
+    DETAIL_BIT,
+    SUMMARY_BIT,
+    SPEC_BIT
+};
+
 #endif

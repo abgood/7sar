@@ -22,13 +22,48 @@ void parse_mod(char *mod_name) {
     }
 }
 
+/* 这个函数看的不是太明白 */
 void special_mod(char *spec_mod) {
     int i, j;
     char mod_name[LEN_32];
     struct module *mod = NULL;
     memset(mod_name, 0, LEN_32);
     sprintf(mod_name, "mod_%s", spec_mod + 5);
-    printf("%s\n", mod_name);
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        if (!strcmp(mod->name, mod_name)) {
+            //load_modules();
+            char *token = strtok(NULL, W_SPACE);
+            struct mod_info *info = mod->info;
+            for (j = 0; j < mod->n_col; j++) {
+                char *p = info[j].hdr;
+                while (*p == ' ') p++;
+                if (strstr(token, p)) {
+                    info[j].summary_bit = SPEC_BIT;
+                    mod->spec = 1;
+                }
+            }
+        }
+    }
+}
+
+void parse_string(char *var) {
+    char *token = strtok(NULL, W_SPACE);
+
+    if (token)
+        strncpy(var, token, strlen(token));
+}
+
+/* 与原来代码不同 */
+void parse_add_string(char *var) {
+    char *token = strtok(NULL, W_SPACE);
+    
+    if (token) {
+        strcat(token, ",");
+        strncat(token, var, strlen(var));
+    }
+    if (token)
+        strncpy(var, token, strlen(token));
 }
 
 static int parse_line(char *buff) {
@@ -40,6 +75,14 @@ static int parse_line(char *buff) {
         parse_mod(token);
     else if (strstr(token, "spec_"))
         special_mod(token);
+    else if (!strcmp(token, "output_interface"))
+        parse_string(conf.output_interface);
+    else if (!strcmp(token, "output_file_path"))
+        parse_string(conf.output_file_path);
+    else if (!strcmp(token, "output_db_addr"))
+        parse_string(conf.output_db_addr);
+    else if (!strcmp(token, "output_db_mod"))
+        parse_add_string(conf.output_db_mod);
     else
         return 0;
     return 1;
