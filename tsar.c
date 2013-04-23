@@ -1,6 +1,8 @@
 #include "tsar.h"
 
 int main (int argc, char **argv) {
-    printf("ok\n");
+
+    parse_config_file(DEFAULT_CONF_FILE_PATH);
+
     return 0;
 }
