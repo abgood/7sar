@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <time.h>
+#include <getopt.h>
 
 #include "define.h"
 #include "config.h"

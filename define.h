@@ -1,6 +1,8 @@
 #ifndef TSAR_DEFINE_H
 #define TSAR_DEFINE_H
 
+#define OLDTSAR
+
 #define DEFAULT_CONF_FILE_PATH "tsar.conf"
 
 #define MAX_MOD_NUM 32
@@ -19,12 +21,39 @@
 #define FALSE 0
 
 #define W_SPACE " \t\r\n"
+#define DATA_SPLIT ","
+
+#define DEFAULT_PRINT_INTERVAL 5
 
 enum {
-    HIDE_BIT,
-    DETAIL_BIT,
-    SUMMARY_BIT,
-    SPEC_BIT
+    HIDE_BIT,     /* 0 */
+    DETAIL_BIT,   /* 1 */
+    SUMMARY_BIT,  /* 2 */
+    SPEC_BIT      /* 3 */
+};
+
+enum {
+    RUN_NULL,        /* 0 */
+    RUN_LIST,        /* 1 */
+    RUN_CRON,        /* 2 */
+#ifdef OLDTSAR
+    RUN_CHECK,       /* 3 */
+    RUN_CHECK_NEW,   /* 4 */
+#endif
+    RUN_PRINT,       /* 5 */
+    RUN_PRINT_LIVE   /* 6 */
+};
+
+enum {
+    DATA_NULL,
+    DATA_SUMMARY,
+    DATA_DETAIL,
+    DATA_ALL
+};
+
+enum {
+    MERGE_NOT,
+    MERGE_ITEM
 };
 
 #endif

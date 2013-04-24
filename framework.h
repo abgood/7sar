@@ -16,6 +16,9 @@ struct module {
     struct mod_info *info;
     int n_col;
     int spec;
+    char usage[LEN_256];
 };
+
+void load_modules(void);
 
 #endif
