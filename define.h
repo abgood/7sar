@@ -22,6 +22,8 @@
 
 #define W_SPACE " \t\r\n"
 #define DATA_SPLIT ","
+#define SECTION_SPLIT "|"
+#define STRING_SPLIT ":"
 
 #define DEFAULT_PRINT_INTERVAL 5
 

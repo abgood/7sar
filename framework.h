@@ -17,8 +17,14 @@ struct module {
     int n_col;
     int spec;
     char usage[LEN_256];
+    int enable;
+    char record[LEN_4096];
+    char opt_line[LEN_32];
+
+    void (*data_collect) (struct module *, char *);
 };
 
 void load_modules(void);
+void collect_record(void);
 
 #endif

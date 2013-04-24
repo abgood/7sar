@@ -150,6 +150,31 @@ static void main_init(int argc, char **argv) {
         do_debug(LOG_FATAL, "main_init: can't find tsar.conf");
 }
 
+void running_list() {
+    int i;
+    struct module *mod;
+
+    printf("tsar enable follow modules:\n");
+
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        printf("\t%s\n", mod->name);
+    }
+}
+
+void running_cron(void) {
+    int have_collect = 0;
+
+    if (strstr(conf.output_interface, "file")) {
+        collect_record();
+        output_file();
+        have_collect = 1;
+    }
+
+    if (strstr(conf.output_interface, "db"))
+        output_db(have_collect);
+}
+
 int main (int argc, char **argv) {
 
     parse_config_file(DEFAULT_CONF_FILE_PATH);
@@ -163,6 +188,14 @@ int main (int argc, char **argv) {
     main_init(argc, argv);
 
     switch (conf.running_mode) {
+        case RUN_LIST:
+            running_list();
+            break;
+
+        case RUN_CRON:
+            conf.print_mode = DATA_DETAIL;
+            running_cron();
+            break;
     }
 
     return 0;

@@ -10,10 +10,15 @@
 #include <time.h>
 #include <getopt.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include "define.h"
 #include "config.h"
 #include "debug.h"
 #include "framework.h"
+#include "output_file.h"
+#include "output_db.h"
 
 struct statistic {
     int total_mod_num;
