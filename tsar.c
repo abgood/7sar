@@ -172,7 +172,10 @@ void running_cron(void) {
     }
 
     if (strstr(conf.output_interface, "db"))
-        output_db(have_collect);
+        output_db();
+
+    if (strstr(conf.output_interface, "nagios"))
+        output_nagios();
 }
 
 int main (int argc, char **argv) {

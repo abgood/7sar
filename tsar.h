@@ -19,6 +19,7 @@
 #include "framework.h"
 #include "output_file.h"
 #include "output_db.h"
+#include "output_nagios.h"
 
 struct statistic {
     int total_mod_num;
