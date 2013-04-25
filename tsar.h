@@ -9,6 +9,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <getopt.h>
+#include <dlfcn.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
