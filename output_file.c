@@ -24,6 +24,7 @@ void output_file(void) {
         }
     }
     strcat(line, "\n");
+    printf("%s", line);
     
     if (ret) {
         if (fputs(line, fp) < 0)

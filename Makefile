@@ -21,4 +21,4 @@ $(TARGET):$(OBJS)
 	chmod u+x $(TARGET)
 
 clean:
-	rm -rf $(OBJS) $(TARGET)
+	rm $(OBJS) $(TARGET) -f

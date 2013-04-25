@@ -32,7 +32,7 @@ void special_mod(char *spec_mod) {
     for (i = 0; i < statis.total_mod_num; i++) {
         mod = &mods[i];
         if (!strcmp(mod->name, mod_name)) {
-            //load_modules();
+            load_modules();
             char *token = strtok(NULL, W_SPACE);
             struct mod_info *info = mod->info;
             for (j = 0; j < mod->n_col; j++) {
@@ -106,6 +106,8 @@ static int parse_line(char *buff) {
         parse_string(conf.output_interface);
     else if (!strcmp(token, "output_file_path"))
         parse_string(conf.output_file_path);
+    else if (!strcmp(token, "module_path"))
+        parse_string(conf.module_path);
     else if (!strcmp(token, "output_db_addr"))
         parse_string(conf.output_db_addr);
     else if (!strcmp(token, "output_db_mod"))
