@@ -1,19 +1,8 @@
 #include "../tsar.h"
 
-static char *cpu_usage = "    --cpu               CPU share (user, system, interrupt, nice, & idle)";
-
-static struct mod_info cpu_info[] = {
-	{"  user", DETAIL_BIT,  0,  STATS_NULL},
-	{"   sys", DETAIL_BIT,  0,  STATS_NULL},
-	{"  wait", DETAIL_BIT,  0,  STATS_NULL},
-	{"  hirq", DETAIL_BIT,  0,  STATS_NULL},
-	{"  sirq", DETAIL_BIT,  0,  STATS_NULL},
-	{"  util", SUMMARY_BIT,  0,  STATS_NULL},
-	{"  nice", HIDE_BIT,  0,  STATS_NULL},
-	{" steal", HIDE_BIT,  0,  STATS_NULL},
-	{" guest", HIDE_BIT,  0,  STATS_NULL},
-};
-
+/*
+ * Structure for CPU infomation.
+ */
 struct stats_cpu {
 	unsigned long long cpu_user;
 	unsigned long long cpu_nice;
@@ -26,17 +15,30 @@ struct stats_cpu {
 	unsigned long long cpu_guest;
 };
 
-static void read_cpu_stats(struct module *mod) {
-    char buf[LEN_4096] = {0};
-    char line[LEN_4096] = {0};
-    FILE *fp;
+#define STATS_CPU_SIZE (sizeof(struct stats_cpu))
 
-    struct stats_cpu st_cpu;
-    memset(&st_cpu, 0, sizeof(struct stats_cpu));
-    if ((fp = fopen(STAT, "r")) == NULL)
-        return;
-    while (fgets(line, LEN_4096, fp) != NULL) {
-        if (!strncmp(line, "cpu", 4)) {
+static char *cpu_usage = "    --cpu               CPU share (user, system, interrupt, nice, & idle)";
+
+
+static void read_cpu_stats(struct module *mod)
+{
+	FILE *fp;
+	char line[LEN_4096];
+	char buf[LEN_4096];
+	memset(buf, 0, LEN_4096);
+	struct stats_cpu st_cpu;
+	memset(&st_cpu, 0, sizeof(struct stats_cpu));
+	//unsigned long long cpu_util;
+	if ((fp = fopen(STAT, "r")) == NULL) {
+		return;
+	}
+	while (fgets(line, LEN_4096, fp) != NULL) {
+		if (!strncmp(line, "cpu ", 4)) {
+			/*
+			 * Read the number of jiffies spent in the different modes
+			 * (user, nice, etc.) among all proc. CPU usage is not reduced
+			 * to one processor to avoid rounding problems.
+			 */
 			sscanf(line+5, "%llu %llu %llu %llu %llu %llu %llu %llu %llu",
 					&st_cpu.cpu_user,
 					&st_cpu.cpu_nice,
@@ -47,8 +49,11 @@ static void read_cpu_stats(struct module *mod) {
 					&st_cpu.cpu_softirq,
 					&st_cpu.cpu_steal,
 					&st_cpu.cpu_guest);
-        }
-    }
+		}
+	}
+	/* cpu_util =  */
+	/*      st_cpu.cpu_user + st_cpu.cpu_sys + */
+	/*      st_cpu.cpu_hardirq + st_cpu.cpu_softirq; */
 
 	int pos = sprintf(buf, "%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu",
 			/* the store order is not same as read procedure */
@@ -61,10 +66,11 @@ static void read_cpu_stats(struct module *mod) {
 			st_cpu.cpu_nice,
 			st_cpu.cpu_steal,
 			st_cpu.cpu_guest);
-    buf[pos] = '\0';
-    set_mod_record(mod, buf);
-    fclose(fp);
-    return;
+
+	buf[pos] = '\0';
+	set_mod_record(mod, buf);
+	fclose(fp);
+	return;
 }
 
 static void set_cpu_record(struct module *mod, double st_array[],
@@ -98,6 +104,20 @@ static void set_cpu_record(struct module *mod, double st_array[],
 	st_array[5] = st_array[0] + st_array[1] + st_array[3] + st_array[4] + st_array[6];
 }
 
-void mod_register(struct module *mod) {
-    register_mod_fileds(mod, "--cpu", cpu_usage, cpu_info, 9, read_cpu_stats, set_cpu_record);
+
+static struct mod_info cpu_info[] = {
+	{"  user", DETAIL_BIT,  0,  STATS_NULL},
+	{"   sys", DETAIL_BIT,  0,  STATS_NULL},
+	{"  wait", DETAIL_BIT,  0,  STATS_NULL},
+	{"  hirq", DETAIL_BIT,  0,  STATS_NULL},
+	{"  sirq", DETAIL_BIT,  0,  STATS_NULL},
+	{"  util", SUMMARY_BIT,  0,  STATS_NULL},
+	{"  nice", HIDE_BIT,  0,  STATS_NULL},
+	{" steal", HIDE_BIT,  0,  STATS_NULL},
+	{" guest", HIDE_BIT,  0,  STATS_NULL},
+};
+
+void mod_register(struct module *mod)
+{
+	register_mod_fileds(mod, "--cpu", cpu_usage, cpu_info, 9, read_cpu_stats, set_cpu_record);
 }
