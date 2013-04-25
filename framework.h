@@ -24,7 +24,7 @@ struct module {
 
     void (*mod_register) (struct module *);
     void (*data_collect) (struct module *, char *);
-    void (*set_st_record) (struct module *, double *, u_64 *, u_64 *, int);
+    void (*set_st_record) (struct module *, double *, U_64 *, U_64 *, int);
 };
 
 void load_modules(void);

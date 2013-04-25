@@ -3,7 +3,7 @@
 
 #define OLDTSAR
 
-#define u_64 unsigned long long
+#define U_64 unsigned long long
 
 #define DEFAULT_CONF_FILE_PATH "tsar.conf"
 
