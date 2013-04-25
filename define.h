@@ -29,6 +29,9 @@
 
 #define DEFAULT_PRINT_INTERVAL 5
 
+#define VMSTAT "/proc/vmstat"
+#define STAT "/proc/stat"
+
 enum {
     HIDE_BIT,     /* 0 */
     DETAIL_BIT,   /* 1 */
@@ -58,6 +61,12 @@ enum {
 enum {
     MERGE_NOT,
     MERGE_ITEM
+};
+
+enum {
+    STATS_NULL,
+    STATS_SUB,
+    STATS_SUB_INTER
 };
 
 #endif

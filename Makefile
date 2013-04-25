@@ -4,6 +4,7 @@ INCLUDE_DIR = -I../include
 TARGET = tsar
 LIBDL = -ldl
 DYNAM = -rdynamic
+DIRS = modules
 
 %.o:%.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -17,8 +18,10 @@ SOURCES = $(wildcard *.c)
 OBJS = $(patsubst %.c,%.o,$(SOURCES))
 
 $(TARGET):$(OBJS)
+	make -C $(DIRS)
 	$(CC) $(OBJS) -o $(TARGET) $(LIBDL) $(DYNAM)
 	chmod u+x $(TARGET)
 
 clean:
 	rm $(OBJS) $(TARGET) -f
+	cd $(DIRS); make clean; cd ..
