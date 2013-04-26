@@ -30,5 +30,6 @@ int query_mysql(char *db_addr, const char *sql) {
     else
         printf("insert data sucess!\n");
 
+    mysql_close(conn);
     return 0;
 }

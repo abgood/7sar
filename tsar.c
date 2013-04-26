@@ -177,6 +177,7 @@ void running_cron(void) {
         output_db();
 
     if (strstr(conf.output_interface, "nagios"))
+        collect_record();
         output_nagios();
 }
 

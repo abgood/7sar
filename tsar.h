@@ -24,6 +24,7 @@
 #include "output_db.h"
 #include "output_nagios.h"
 #include "query_mysql.h"
+#include "common.h"
 
 struct statistic {
     int total_mod_num;

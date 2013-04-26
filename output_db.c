@@ -10,6 +10,7 @@ void output_db(void) {
     char token[LEN_128] = {0};
     const char *sql;
 
+    /* from_unixtime 何俊杰提供 */
     sprintf(value, "from_unixtime(%ld),", statis.cur_time);
     strcat(field, "time,");
     for (i = 0; i < statis.total_mod_num; i++) {
@@ -32,7 +33,9 @@ void output_db(void) {
     sprintf(cmd, "INSERT INTO data_collect(%s) values (%s)", field, value);
     sql = cmd;
 
-    /* 是否执行正确正确mysql */
-    if (query_mysql(conf.output_db_addr, sql))
-        exit(1);
+    if (ret) {
+        /* 是否执行正确正确mysql */
+        if (query_mysql(conf.output_db_addr, sql))
+            exit(1);
+    }
 }
