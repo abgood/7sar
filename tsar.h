@@ -14,6 +14,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <mysql/mysql.h>
+
 #include "define.h"
 #include "config.h"
 #include "debug.h"
@@ -21,6 +23,7 @@
 #include "output_file.h"
 #include "output_db.h"
 #include "output_nagios.h"
+#include "conn.h"
 
 struct statistic {
     int total_mod_num;

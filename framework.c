@@ -1,8 +1,7 @@
 #include "tsar.h"
 
 void register_mod_fileds(struct module *mod, char *opt, char *usage,
-		struct mod_info *info, int n_col, void *data_collect, void *set_st_record)
-{
+		struct mod_info *info, int n_col, void *data_collect, void *set_st_record) {
 	sprintf(mod->opt_line, "%s", opt);
 	sprintf(mod->usage, "%s", usage);
 	mod->info = info;
@@ -12,8 +11,7 @@ void register_mod_fileds(struct module *mod, char *opt, char *usage,
 }
 
 
-void set_mod_record(struct module *mod, char *record)
-{
+void set_mod_record(struct module *mod, char *record) {
 	if (record)
 		sprintf(mod->record, "%s", record);
 }

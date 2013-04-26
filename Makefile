@@ -4,6 +4,8 @@ INCLUDE_DIR = -I../include
 TARGET = tsar
 LIBDL = -ldl
 DYNAM = -rdynamic
+LIBMYSQL=`mysql_config --libs`
+
 DIRS = modules
 
 %.o:%.c
@@ -19,7 +21,7 @@ OBJS = $(patsubst %.c,%.o,$(SOURCES))
 
 $(TARGET):$(OBJS)
 	make -C $(DIRS)
-	$(CC) $(OBJS) -o $(TARGET) $(LIBDL) $(DYNAM)
+	$(CC) $(OBJS) -o $(TARGET) $(LIBDL) $(DYNAM) $(LIBMYSQL)
 	chmod u+x $(TARGET)
 
 clean:
