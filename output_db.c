@@ -4,7 +4,6 @@
 void output_db(void) {
     MYSQL *conn;
     struct module *mod;
-    FILE *fp = NULL;
     char line[LEN_10240] = {0};
     char detail[LEN_4096] = {0};
     char s_time[LEN_256] = {0};
