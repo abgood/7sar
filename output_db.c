@@ -23,6 +23,5 @@ void output_db(void) {
             ret = 1;
         }
     }
-    strcat(line, "\n");
-    printf("%s", line);
+    printf("%s\n", line);
 }

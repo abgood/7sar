@@ -172,6 +172,8 @@ void running_cron(void) {
     }
 
     if (strstr(conf.output_interface, "db"))
+        /* 数据库操作时这里未写收集数据到mod->record里 */
+        collect_record();
         output_db();
 
     if (strstr(conf.output_interface, "nagios"))
