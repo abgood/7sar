@@ -27,6 +27,7 @@
 #define SECTION_SPLIT "|"
 #define STRING_SPLIT ":"
 #define ITEM_SPLIT ";"
+#define ITEM_SPSTART "="
 
 #define DEFAULT_PRINT_INTERVAL 5
 

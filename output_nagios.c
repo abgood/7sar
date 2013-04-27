@@ -3,9 +3,11 @@
 void output_nagios(void) {
     int now_time;
     char host_name[LEN_64] = {0};
-    int i = 0;
+    int i = 0, result = 0;
     char s_time[LEN_64] = {0};
     struct module *mod;
+    char output_err[LEN_4096] = {0};
+    char output[LEN_4096] = {0};
 
     now_time = statis.cur_time - statis.cur_time%60;
     /* 轮转时间是否正常 */
@@ -22,8 +24,8 @@ void output_nagios(void) {
         }
     }
 
-    conf.print_merge = MERGE_NOT;
     /*
+    conf.print_merge = MERGE_NOT;
     if (get_st_array_from_file(0))
         return;
     */
@@ -44,4 +46,21 @@ void output_nagios(void) {
             printf("%s\n", token);
         }
     }
+
+    /* 组合nagios命令串,把数据写到nagios服务器上 */
+    if (!strcmp(output_err, ""))
+        strcat(output_err, "OK");
+
+    char nagios_cmd[LEN_1024];
+    sprintf(nagios_cmd, "echo \"%s;tsar;%d;%s|%s\"|%s -H %s -p %d -to 10 -d \";\" -c %s", host_name, result, output_err, output, conf.send_nsca_cmd, conf.server_addr, *(conf.server_port), conf.send_nsca_conf);
+
+    do_debug(LOG_DEBUG, "send to nagios:%s\n", nagios_cmd);
+
+    /*
+    if (system(nagios_cmd) != 0)
+        do_debug(LOG_WARN, "nsca run error:%s\n", nagios_cmd);
+    */
+
+    printf("%s\n", nagios_cmd);
+    printf("%d\n", conf.mod_num);
 }
