@@ -13,14 +13,29 @@ struct mod_info {
 struct module {
     char name[LEN_32];
     char parameter[LEN_256];
-    struct mod_info *info;
-    int n_col;
-    int spec;
     char usage[LEN_256];
-    int enable;
     char record[LEN_4096];
     char opt_line[LEN_32];
+
+    struct mod_info *info;
+
+    int n_col;
+    int n_item;
+    long n_record;
+
+    int spec;
+    int enable;
     void *lib;
+
+    U_64 *pre_array;
+    U_64 *cur_array;
+    double *st_array;
+    double *max_array;
+    double *mean_array;
+    double *min_array;
+
+    int pre_flag:4;
+    int st_flag:4;
 
     void (*mod_register) (struct module *);
     void (*data_collect) (struct module *, char *);
@@ -31,5 +46,8 @@ void load_modules(void);
 void collect_record(void);
 void register_mod_fileds(struct module *, char *, char *, struct mod_info *, int, void *, void *);
 void set_mod_record(struct module *, char *);
+void read_line_to_module_record(char *);
+void init_module_fields(void);
+void collect_record_stat(void);
 
 #endif

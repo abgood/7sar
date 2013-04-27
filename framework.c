@@ -62,3 +62,72 @@ void collect_record(void) {
             mod->data_collect(mod, mod->parameter);
     }
 }
+
+void read_line_to_module_record(char *line) {
+    int i;
+    struct module *mod;
+    char *s_token, *e_token;
+
+    line[strlen(line) - 1] = '\0';
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        if (mod->enable) {
+            memset(mod->record, 0, sizeof(mod->record));
+            s_token = strstr(line, mod->opt_line);
+            // 没匹配到opt_line则到for
+            if (!s_token)
+                continue;
+
+            s_token += strlen(mod->opt_line) + sizeof(STRING_SPLIT) - 1;
+            e_token = strstr(s_token, SECTION_SPLIT);
+
+            if (e_token)
+                memcpy(mod->record, s_token, e_token - s_token);
+            else
+                // line的总长 减去 从line的开头到s_token这一段
+                memcpy(mod->record, s_token, strlen(line) - (s_token - line));
+        }
+    }
+}
+
+void init_module_fields() {
+    int i;
+    struct module *mod;
+
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        if (!mod->enable)
+            continue;
+
+        if (MERGE_ITEM == conf.print_merge)
+            mod->n_item = 1;
+        else
+            mod->n_item = get_strtok_num(mod->record, ITEM_SPLIT);
+
+        if (mod->n_item) {
+            mod->pre_array = (U_64 *)calloc(mod->n_item * mod->n_col, sizeof(U_64));
+            mod->cur_array = (U_64 *)calloc(mod->n_item * mod->n_col, sizeof(U_64));
+            mod->st_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
+            if (conf.print_tail) {
+                mod->max_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
+                mod->mean_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
+                mod->min_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
+            }
+        }
+    }
+}
+
+int collect_record_stat(void) {
+    int i, ret;
+    struct module *mod;
+    U_64 *tmp, array[MAX_COL_NUM] = {0};
+
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        if (!mod->enable)
+            continue;
+
+        mod->st_flag = 0;
+        ret = 0;
+    }
+}

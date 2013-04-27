@@ -10,6 +10,7 @@
 #include <time.h>
 #include <getopt.h>
 #include <dlfcn.h>
+#include <ctype.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
