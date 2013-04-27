@@ -51,7 +51,11 @@ int get_st_array_from_file(int have_collect) {
 
     read_line_to_module_record(pre_line);
     init_module_fields();
-    collect_record_stat();
+    // collect_record_stat();
+
+    read_line_to_module_record(line);
+    //collect_record_stat();
+    ret = 0;
 
 
     /* 写入记录到 /tmp/.tsar.tmp */

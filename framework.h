@@ -48,6 +48,7 @@ void register_mod_fileds(struct module *, char *, char *, struct mod_info *, int
 void set_mod_record(struct module *, char *);
 void read_line_to_module_record(char *);
 void init_module_fields(void);
-void collect_record_stat(void);
+int collect_record_stat(void);
+int reload_modules(char *);
 
 #endif

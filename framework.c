@@ -117,17 +117,39 @@ void init_module_fields() {
     }
 }
 
+/* 此函数完全没看懂 */
 int collect_record_stat(void) {
-    int i, ret;
+    return 0;
+}
+
+int is_include_string(char *mods, char *mod) {
+    char *token, n_str[LEN_512] = {0};
+
+    memcpy(n_str, mods, strlen(mods));
+    token = strtok(n_str, DATA_SPLIT);
+    while (token) {
+        if (!strcmp(token, mod))
+            return 1;
+        token = strtok(NULL, DATA_SPLIT);
+    }
+    return 0;
+}
+
+int reload_modules(char *s_mod) {
+    int reload = 0;
+    int i;
     struct module *mod;
-    U_64 *tmp, array[MAX_COL_NUM] = {0};
+    
+    if (!s_mod || !strlen(s_mod))
+        return reload;
 
     for (i = 0; i < statis.total_mod_num; i++) {
         mod = &mods[i];
-        if (!mod->enable)
-            continue;
-
-        mod->st_flag = 0;
-        ret = 0;
+        if (is_include_string(s_mod, mod->name) || is_include_string(s_mod, mod->opt_line)) {
+            mod->enable = 1;
+            reload = 1;
+        } else
+            mod->enable = 0;
     }
+    return reload;
 }
