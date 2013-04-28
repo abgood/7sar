@@ -24,11 +24,12 @@ void output_file(void) {
         }
     }
     strcat(line, "\n");
-    printf("%s", line);
     
     if (ret) {
         if (fputs(line, fp) < 0)
             do_debug(LOG_WARN, "write line error\n");
+        else
+            printf("Insert data into FILE success!\n");
     }
     fclose(fp);
     if (chmod(conf.output_file_path, 0666) < 0)

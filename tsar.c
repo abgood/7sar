@@ -166,18 +166,16 @@ void running_cron(void) {
     int have_collect = 0;
 
     if (strstr(conf.output_interface, "file")) {
+        /* 一次收集数据,db和nagios都可以使用 */
         collect_record();
         output_file();
         have_collect = 1;
     }
 
     if (strstr(conf.output_interface, "db"))
-        /* 数据库操作时这里未写收集数据到mod->record里 */
-        collect_record();
         output_db();
 
     if (strstr(conf.output_interface, "nagios"))
-        collect_record();
         output_nagios();
 }
 
@@ -202,6 +200,12 @@ int main (int argc, char **argv) {
             conf.print_mode = DATA_DETAIL;
             running_cron();
             break;
+#ifdef OLDTSAR            
+        case RUN_CHECK:
+            reload_check_modules();
+            running_check(RUN_CHECK);
+            break;
+#endif        
     }
 
     return 0;

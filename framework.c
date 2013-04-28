@@ -153,3 +153,20 @@ int reload_modules(char *s_mod) {
     }
     return reload;
 }
+
+#ifdef OLDTSAR
+
+void reload_check_modules(void) {
+    int i;
+    struct module *mod;
+
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        if (!strcmp(mod->name, "apache") || !strcmp(mod->name, "mod_cpu") || !strcmp(mod->name, "mod_mem") || !strcmp(mod->name, "mod_load") || !strcmp(mod->name, "mod_partition") || !strcmp(mod->name, "mod_io") || !strcmp(mod->name, "mod_tcp") || !strcmp(mod->name, "mod_traffic") || !strcmp(mod->name, "mod_nginx"))
+            mod->enable = 1;
+        else
+            mod->enable = 0;
+    }
+}
+
+#endif

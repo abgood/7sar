@@ -28,7 +28,7 @@ int query_mysql(char *db_addr, const char *sql) {
         do_debug(LOG_FATAL, "fail to insert data!\n");
     }
     else
-        printf("insert data sucess!\n");
+        printf("Insert data into DB success!\n");
 
     mysql_close(conn);
     return 0;

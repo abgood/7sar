@@ -50,5 +50,8 @@ void read_line_to_module_record(char *);
 void init_module_fields(void);
 int collect_record_stat(void);
 int reload_modules(char *);
+#ifdef OLDTSAR
+void reload_check_modules(void);
+#endif
 
 #endif
