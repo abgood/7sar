@@ -37,7 +37,6 @@ void running_check(int check_type) {
         }
     }
 
-    printf("%d\n", total_num);
     if (total_num == 0) {
         fclose(fp);
         memset(filename, 0, sizeof(filename));
@@ -94,5 +93,10 @@ void running_check(int check_type) {
         fgets(line[1], LEN_10240, fp);
     }
 
+    /* set struct module fields */
     init_module_fields();
+
+    /* read one line to init module parameter */
+    read_line_to_module_record(line[0]);
+    collect_record_stat();
 }

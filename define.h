@@ -28,6 +28,7 @@
 #define STRING_SPLIT ":"
 #define ITEM_SPLIT ";"
 #define ITEM_SPSTART "="
+#define DATA_SPLIT ","
 
 #define DEFAULT_PRINT_INTERVAL 5
 
@@ -69,6 +70,12 @@ enum {
     STATS_NULL,
     STATS_SUB,
     STATS_SUB_INTER
+};
+
+enum {
+    MERGE_NULL,
+    MERGE_SUM,
+    MERGE_AVG
 };
 
 #endif

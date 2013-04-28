@@ -117,9 +117,75 @@ void init_module_fields() {
     }
 }
 
+/* 重分配存储,当mod->n_item是被改变 */
+void realloc_module_array(struct module *mod, int n_n_item) {
+    if (n_n_item > mod->n_item) {
+        if (mod->pre_array) {
+            mod->pre_array = (U_64 *)realloc(mod->pre_array, n_n_item * mod->n_col * sizeof(U_64));
+            mod->cur_array = (U_64 *)realloc(mod->cur_array, n_n_item * mod->n_col * sizeof(U_64));
+            mod->st_array = (double *)realloc(mod->st_array, n_n_item * mod->n_col * sizeof(double));
+            if (conf.print_tail) {
+                mod->max_array = (double *)realloc(mod->max_array, n_n_item * mod->n_col * sizeof(double));
+                mod->mean_array = (double *)realloc(mod->mean_array, n_n_item * mod->n_col * sizeof(double));
+                mod->min_array = (double *)realloc(mod->min_array, n_n_item * mod->n_col * sizeof(double));
+            }
+        } else {
+            mod->pre_array = (U_64 *)calloc(mod->n_item * mod->n_col, sizeof(U_64));
+            mod->cur_array = (U_64 *)calloc(mod->n_item * mod->n_col, sizeof(U_64));
+            mod->st_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
+            if (conf.print_tail) {
+                mod->max_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
+                mod->mean_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
+                mod->min_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
+            }
+        }
+    }
+}
+
 /* 此函数完全没看懂 */
 int collect_record_stat(void) {
-    return 0;
+    struct module *mod = NULL;
+    int i, n_item, ret, no_p_hdr = 1;
+    U_64 *tmp, array[MAX_MOD_NUM];
+
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        if (!mod->enable)
+            continue;
+
+        memset(array, 0, sizeof(array));
+        mod->st_flag = 0;
+        ret = 0;
+
+        /* 一个模块里可能监测多个项,每个项是通过分号来分割的 */
+        if ((n_item = get_strtok_num(mod->record, ITEM_SPLIT))) {
+            /* not merge mode, and last n_item != cur n_item, then reset mod->n_item and set reprint header flag */
+            if (MERGE_ITEM != conf.print_merge && n_item && n_item != mod->n_item) {
+                no_p_hdr = 0;
+                realloc_module_array(mod, n_item);
+            }
+
+            mod->n_item = n_item;
+            /* 多个项是用分号分开的 */
+            if (strstr(mod->record, ITEM_SPLIT)) {
+                /* 合并项 */
+                if (MERGE_ITEM == conf.print_merge) {
+                    mod->n_item = 1;
+                    ret = merge_mult_item_to_array(mod->cur_array, mod);
+                } else {
+                    char item[LEN_128] = {0};
+                    int num = 0;
+                    int pos = 0;
+
+                    while (strtok_next_item(item, mod->record, &pos)) {
+                        if (!(ret = convert_record_to_array()))
+                    }
+                }
+            }
+        }
+
+    }
+    return no_p_hdr;
 }
 
 int is_include_string(char *mods, char *mod) {
