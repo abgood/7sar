@@ -99,4 +99,7 @@ void running_check(int check_type) {
     /* read one line to init module parameter */
     read_line_to_module_record(line[0]);
     collect_record_stat();
+
+    read_line_to_module_record(line[1]);
+    collect_record_stat();
 }

@@ -142,6 +142,61 @@ void realloc_module_array(struct module *mod, int n_n_item) {
     }
 }
 
+/* set st result in st_array */
+void set_st_record(struct module *mod) {
+    int i, j, k = 0;
+    struct mod_info *info = mod->info;
+    mod->st_flag = 1;
+
+    for (i = 0; i < mod->n_item; i++) {
+        if (mod->set_st_record) {
+            mod->set_st_record(mod, &mod->st_array[i * mod->n_col],
+                    &mod->pre_array[i * mod->n_col],
+                    &mod->cur_array[i * mod->n_col],
+                    conf.print_interval);
+        }
+
+        for (j = 0; j < mod->n_col; j++) {
+            if (!mod->set_st_record) {
+                switch (info[j].stats_opt) {
+                    case STATS_SUB:
+                        if (mod->cur_array[k] < mod->pre_array[k]) {
+                            mod->pre_array[k] = mod->cur_array[k];
+                            mod->st_flag = 0;
+                        } else
+                            mod->st_array[k] = mod->cur_array[k] - mod->pre_array[k];
+                        break;
+                    case STATS_SUB_INTER:
+                        if (mod->cur_array[k] < mod->pre_array[k]) {
+                            mod->pre_array[k] = mod->cur_array[k];
+                            mod->st_flag = 0;
+                        } else
+                            mod->st_array[k] = (mod->cur_array[k] - mod->pre_array[k]) / conf.print_interval;
+                        break;
+                    default:
+                        mod->st_array[k] = mod->cur_array[k];
+                }
+            mod->st_array[k] *= 1.0;
+            }
+
+            if (conf.print_tail) {
+                if (0 == mod->record)
+                    mod->max_array[k] = mod->mean_array[k] = mod->min_array[k] = mod->st_array[k] * 1.0;
+                else {
+                    if (mod->st_array[k] - mod->max_array[k] > 0.1)
+                        mod->max_array[k] = mod->st_array[k];
+                    if (mod->min_array[k] - mod->st_array[k] > 0.1 && mod->st_array[k] >= 0)
+                        mod->min_array[k] = mod->st_array[k];
+                    if(mod->st_array[k] >= 0)
+                        mod->mean_array[k] = ((mod->n_record-1) *mod->mean_array[k] + mod->st_array[k])/mod->n_record;
+                }
+            }
+            k++;
+        }
+    }
+    mod->n_record++;
+}
+
 /* 此函数完全没看懂 */
 int collect_record_stat(void) {
     struct module *mod = NULL;
@@ -178,12 +233,31 @@ int collect_record_stat(void) {
                     int pos = 0;
 
                     while (strtok_next_item(item, mod->record, &pos)) {
-                        if (!(ret = convert_record_to_array()))
+                        if (!(ret = convert_record_to_array(&mod->cur_array[num * mod->n_col], mod->n_col, item)))
+                            break;
+                        memset(item, 0, sizeof(item));
+                        num++;
                     }
                 }
+            } else {    /* ont item */
+                ret = convert_record_to_array(mod->cur_array, mod->n_col, mod->record);
             }
-        }
 
+            /* get st record */
+            if (no_p_hdr && mod->pre_flag && ret)
+                set_st_record(mod);
+
+            if (!ret)
+                mod->pre_flag = 0;
+            else
+                mod->pre_flag = 1;
+        } else 
+            mod->pre_flag = 0;
+
+        /* swap cur_array to pre_curry */
+        tmp = mod->pre_array;
+        mod->pre_array = mod->cur_array;
+        mod->cur_array = tmp;
     }
     return no_p_hdr;
 }
