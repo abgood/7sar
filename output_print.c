@@ -5,11 +5,8 @@ void running_check(int check_type) {
     char check[LEN_10240] = {0};
     char filename[LEN_128] = {0};
     char line[2][10240];
-    int i, j, total_num = 0;
+    int i, total_num = 0;
     FILE *fp;
-    struct module *mod;
-    double *st_array;
-    char tmp[9][LEN_256];
 
     if (0 != gethostname(host_name, sizeof(host_name)))
         do_debug(LOG_FATAL, "tsar -check: gethostname err, errno=%d\n", errno);
@@ -89,80 +86,4 @@ void running_check(int check_type) {
         fgets(line[1], LEN_10240, fp);
     }
 
-    /* 收集信息这块有点小问题 */
-    /* set struct module fields*/
-    read_line_to_module_record(line[0]);
-    init_module_fields();
-
-    collect_record_stat();
-
-    read_line_to_module_record(line[1]);
-    collect_record_stat();
-
-    /* -----------------------------------RUN_CHECK_NEW------------------------------ */
-    if (check_type == RUN_CHECK_NEW) {
-        printf("%s\ttsar\t", host_name);
-    }
-
-#ifdef OLDTSAR
-    /* -----------------------------------RUN_CHECK------------------------------ */
-    if (check_type == RUN_CHECK) {
-
-        for (i = 0; i < statis.total_mod_num; i++) {
-            mod = &mods[i];
-            if (!mod->enable)
-                continue;
-
-            if (!strcmp(mod->name, "mod_apache")) {
-                ;
-            }
-
-            if (!strcmp(mod->name, "mod_cpu")) {
-                for (j = 0; j < mod->n_col; j++) {
-                    st_array = &mod->st_array[j * mod->n_col];
-                    if (!st_array || !mod->st_flag)
-                        sprintf(tmp[0], " apache/qps=- apache/rt=- apache/busy=- apache/idle=-");
-                    else 
-                        sprintf(tmp[0], " apache/qps=%0.2f apache/rt=%0.2f apache/busy=%0.0f apache/idle=%0.0f", st_array[0], st_array[1], st_array[2], st_array[3]);
-                }
-            }
-
-            if (!strcmp(mod->name, "mod_mem")) {
-                ;
-            }
-
-            if (!strcmp(mod->name, "mod_load")) {
-                ;
-            }
-
-            if (!strcmp(mod->name, "mod_io")) {
-                ;
-            }
-
-            if (!strcmp(mod->name, "mod_traffic")) {
-                ;
-            }
-
-            if (!strcmp(mod->name, "mod_tcp")) {
-                ;
-            }
-
-            if (!strcmp(mod->name, "mod_partition")) {
-                ;
-            }
-
-            if (!strcmp(mod->name, "mod_nginx")) {
-                ;
-            }
-
-        }
-
-        for (j = 0; j < 9; j++)
-            strcat(check, tmp[j]);
-
-        printf("%s\n", check);
-        fclose(fp);
-        fp = NULL;
-    }
-#endif
 }
