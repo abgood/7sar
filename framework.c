@@ -91,33 +91,34 @@ void read_line_to_module_record(char *line) {
 }
 
 void init_module_fields() {
-    int i;
-    struct module *mod;
+	struct module *mod = NULL;
+	int  i;
 
-    for (i = 0; i < statis.total_mod_num; i++) {
-        mod = &mods[i];
-        if (!mod->enable)
-            continue;
+	for (i = 0; i < statis.total_mod_num; i++) {
+		mod = &mods[i];
+		if (!mod->enable)	
+			continue;
 
-        if (MERGE_ITEM == conf.print_merge)
-            mod->n_item = 1;
-        else
-            mod->n_item = get_strtok_num(mod->record, ITEM_SPLIT);
+		if (MERGE_ITEM == conf.print_merge)
+			mod->n_item = 1;
+		else 
+			/* get mod->n_item first, and mod->n_item will be reseted in reading next line */
+			mod->n_item = get_strtok_num(mod->record, ITEM_SPLIT);
 
-        if (mod->n_item) {
-            mod->pre_array = (U_64 *)calloc(mod->n_item * mod->n_col, sizeof(U_64));
-            mod->cur_array = (U_64 *)calloc(mod->n_item * mod->n_col, sizeof(U_64));
-            mod->st_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
-            if (conf.print_tail) {
-                mod->max_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
-                mod->mean_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
-                mod->min_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
-            }
-        }
-    }
+		if (mod->n_item) {
+			mod->pre_array = (U_64 *)calloc(mod->n_item * mod->n_col, sizeof(U_64));
+			mod->cur_array = (U_64 *)calloc(mod->n_item * mod->n_col, sizeof(U_64));
+			mod->st_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
+			if (conf.print_tail) {
+				mod->max_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
+				mod->mean_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
+				mod->min_array = (double *)calloc(mod->n_item * mod->n_col, sizeof(double));
+			}
+		}
+	}
 }
 
-/* 重分配存储,当mod->n_item是被改变 */
+/* 重分配存储,当n_item不为mod->n_item */
 void realloc_module_array(struct module *mod, int n_n_item) {
     if (n_n_item > mod->n_item) {
         if (mod->pre_array) {
@@ -144,106 +145,119 @@ void realloc_module_array(struct module *mod, int n_n_item) {
 
 /* set st result in st_array */
 void set_st_record(struct module *mod) {
-    int i, j, k = 0;
-    struct mod_info *info = mod->info;
-    mod->st_flag = 1;
+	int i, j, k = 0;	
+	struct mod_info *info = mod->info;
 
-    for (i = 0; i < mod->n_item; i++) {
-        if (mod->set_st_record) {
-            mod->set_st_record(mod, &mod->st_array[i * mod->n_col],
-                    &mod->pre_array[i * mod->n_col],
-                    &mod->cur_array[i * mod->n_col],
-                    conf.print_interval);
-        }
+	mod->st_flag = 1;
 
-        for (j = 0; j < mod->n_col; j++) {
-            if (!mod->set_st_record) {
-                switch (info[j].stats_opt) {
-                    case STATS_SUB:
-                        if (mod->cur_array[k] < mod->pre_array[k]) {
-                            mod->pre_array[k] = mod->cur_array[k];
-                            mod->st_flag = 0;
-                        } else
-                            mod->st_array[k] = mod->cur_array[k] - mod->pre_array[k];
-                        break;
-                    case STATS_SUB_INTER:
-                        if (mod->cur_array[k] < mod->pre_array[k]) {
-                            mod->pre_array[k] = mod->cur_array[k];
-                            mod->st_flag = 0;
-                        } else
-                            mod->st_array[k] = (mod->cur_array[k] - mod->pre_array[k]) / conf.print_interval;
-                        break;
-                    default:
-                        mod->st_array[k] = mod->cur_array[k];
-                }
-            mod->st_array[k] *= 1.0;
-            }
+	for (i = 0; i < mod->n_item; i++) {
+		/* custom statis compute */
+		if (mod->set_st_record) {
+			mod->set_st_record(mod, &mod->st_array[i * mod->n_col], 
+					&mod->pre_array[i * mod->n_col],
+					&mod->cur_array[i * mod->n_col],
+					conf.print_interval);
+		}
 
-            if (conf.print_tail) {
-                if (0 == mod->record)
-                    mod->max_array[k] = mod->mean_array[k] = mod->min_array[k] = mod->st_array[k] * 1.0;
-                else {
-                    if (mod->st_array[k] - mod->max_array[k] > 0.1)
-                        mod->max_array[k] = mod->st_array[k];
-                    if (mod->min_array[k] - mod->st_array[k] > 0.1 && mod->st_array[k] >= 0)
-                        mod->min_array[k] = mod->st_array[k];
-                    if(mod->st_array[k] >= 0)
-                        mod->mean_array[k] = ((mod->n_record-1) *mod->mean_array[k] + mod->st_array[k])/mod->n_record;
-                }
-            }
-            k++;
-        }
-    }
-    mod->n_record++;
+		for (j=0; j < mod->n_col; j++) {
+			if (!mod->set_st_record) {
+				switch (info[j].stats_opt) {
+					case STATS_SUB:
+						if (mod->cur_array[k] < mod->pre_array[k]) {
+							mod->pre_array[k] = mod->cur_array[k];
+							mod->st_flag = 0;
+						}
+						else
+							mod->st_array[k] = mod->cur_array[k] - mod->pre_array[k];
+						break;
+					case STATS_SUB_INTER:
+						if (mod->cur_array[k] < mod->pre_array[k]) {
+							mod->pre_array[k] = mod->cur_array[k];
+							mod->st_flag = 0;
+						}
+						else
+							mod->st_array[k] = (mod->cur_array[k] -mod->pre_array[k])/conf.print_interval;
+						break;
+					default:
+						mod->st_array[k] = mod->cur_array[k];	
+				}
+				mod->st_array[k] *= 1.0;
+			}
+
+			if (conf.print_tail) {
+				if (0 == mod->n_record) {
+					mod->max_array[k] = mod->mean_array[k] = mod->min_array[k] = mod->st_array[k]*1.0;
+				} else {
+					if (mod->st_array[k] - mod->max_array[k] > 0.1)
+						mod->max_array[k] = mod->st_array[k];
+					if (mod->min_array[k] - mod->st_array[k] > 0.1 && mod->st_array[k] >= 0)
+						mod->min_array[k] = mod->st_array[k];
+					if(mod->st_array[k] >= 0)
+						mod->mean_array[k] = ((mod->n_record-1) *mod->mean_array[k] + mod->st_array[k])/mod->n_record;
+				}
+			}
+			k++;
+		}
+	}
+
+	mod->n_record++;
 }
 
 /* 此函数完全没看懂 */
 int collect_record_stat(void) {
-    struct module *mod = NULL;
-    int i, n_item, ret, no_p_hdr = 1;
-    U_64 *tmp, array[MAX_MOD_NUM];
+    int no_p_hdr = 1;
+    struct module *mod;
+    int i, ret, n_item;
+    U_64 *tmp;
 
     for (i = 0; i < statis.total_mod_num; i++) {
         mod = &mods[i];
         if (!mod->enable)
             continue;
 
-        memset(array, 0, sizeof(array));
         mod->st_flag = 0;
         ret = 0;
 
-        /* 一个模块里可能监测多个项,每个项是通过分号来分割的 */
         if ((n_item = get_strtok_num(mod->record, ITEM_SPLIT))) {
-            /* not merge mode, and last n_item != cur n_item, then reset mod->n_item and set reprint header flag */
+            /* n_item不为合并模式并且最后的n_item不等于当前的n_item */
             if (MERGE_ITEM != conf.print_merge && n_item && n_item != mod->n_item) {
                 no_p_hdr = 0;
+                /* 每个mod的项目数较上次改变了就需要重新分配项目内容所需的内存空间 */
                 realloc_module_array(mod, n_item);
             }
 
+            /* 保存新项目数 */
             mod->n_item = n_item;
-            /* 多个项是用分号分开的 */
+
+            /* 查找mod的record里是否包含项目分隔符,找到是多项目 */
             if (strstr(mod->record, ITEM_SPLIT)) {
-                /* 合并项 */
+
+                /* print_merge为合并模式,则把多个项合并成一个项 */
                 if (MERGE_ITEM == conf.print_merge) {
                     mod->n_item = 1;
                     ret = merge_mult_item_to_array(mod->cur_array, mod);
                 } else {
-                    char item[LEN_128] = {0};
-                    int num = 0;
-                    int pos = 0;
+					char item[LEN_128] = {0};
+					int num = 0;
+					int pos = 0;
 
-                    while (strtok_next_item(item, mod->record, &pos)) {
-                        if (!(ret = convert_record_to_array(&mod->cur_array[num * mod->n_col], mod->n_col, item)))
-                            break;
-                        memset(item, 0, sizeof(item));
-                        num++;
-                    }
+					while (strtok_next_item(item, mod->record, &pos)) {
+						if (!(ret=convert_record_to_array(&mod->cur_array[num * mod->n_col],mod->n_col,item)))
+							break;
+						memset(item, 0, sizeof(item));
+						num++;
+					}
                 }
-            } else {    /* ont item */
+
+            } else {
                 ret = convert_record_to_array(mod->cur_array, mod->n_col, mod->record);
             }
 
-            /* get st record */
+            /*
+            printf("%d\n", no_p_hdr);
+            printf("%d\n", ret);
+            printf("%d\n", mod->pre_flag);
+            */
             if (no_p_hdr && mod->pre_flag && ret)
                 set_st_record(mod);
 
@@ -251,14 +265,16 @@ int collect_record_stat(void) {
                 mod->pre_flag = 0;
             else
                 mod->pre_flag = 1;
-        } else 
-            mod->pre_flag = 0;
 
-        /* swap cur_array to pre_curry */
-        tmp = mod->pre_array;
-        mod->pre_array = mod->cur_array;
-        mod->cur_array = tmp;
+        } else {
+            mod->pre_flag = 0;
+            /* swap cur_array to pre_array */
+            tmp = mod->pre_array;
+            mod->pre_array = mod->cur_array;
+            mod->cur_array = tmp;
+        }
     }
+
     return no_p_hdr;
 }
 
@@ -310,3 +326,32 @@ void reload_check_modules(void) {
 }
 
 #endif
+
+void disable_col_zero(void) {
+    struct module *mod;
+    int i, j;
+
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        if (!mod->enable)
+            continue;
+
+        if (!mod->n_col)
+            mod->enable = 0;
+        else {
+            struct mod_info *info = mod->info;
+            int p_col = 0;
+
+            for (j = 0; j < mod->n_col; j++) {
+                if (((DATA_SUMMARY == conf.print_mode) && (SUMMARY_BIT == info[j].summary_bit))
+                        || ((DATA_DETAIL == conf.print_mode) && (HIDE_BIT != info[j].summary_bit))) {
+                    p_col++;
+                    break;
+                }
+            }
+
+            if (!p_col)
+                mod->enable = 0;
+        }
+    }
+}

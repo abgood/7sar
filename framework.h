@@ -53,5 +53,6 @@ int reload_modules(char *);
 #ifdef OLDTSAR
 void reload_check_modules(void);
 #endif
+void disable_col_zero(void);
 
 #endif

@@ -70,8 +70,7 @@ out:
     return ret;
 }
 
-int get_strtok_num(char *str, char *split)
-{
+int get_strtok_num(char *str, char *split) {
 	int num = 0;
 	char *token, n_str[LEN_4096] = {0};
 
@@ -116,9 +115,9 @@ int is_digit(char *str) {
 
 /* convert record to array */
 int convert_record_to_array(U_64 *array, int l_array, char *record) {
+    char *token;
     char n_str[LEN_4096] = {0};
     int i = 0;
-    char *token;
 
     if (!record || !strlen(record))
         return 0;
@@ -130,12 +129,14 @@ int convert_record_to_array(U_64 *array, int l_array, char *record) {
             return 0;
         if (i < l_array)
             *(array + i) = strtoull(token, NULL, 10);
+            //printf("%d\n", strtoull(token, NULL, 10));
+            //printf("%d\n", array[i]);
         token = strtok(NULL, DATA_SPLIT);
         i++;
     }
     if (i != l_array)
         return 0;
-    
+
     return i;
 }
 
@@ -163,17 +164,16 @@ int merge_one_string(U_64 *array, int l_array, char *string, struct module *mod,
 }
 
 int merge_mult_item_to_array(U_64 *array, struct module *mod) {
-    int n_item = 1;
-    int pos = 0;
-    char item[LEN_128] = {0};
+	char item[LEN_128] = {0};
+	int pos = 0;
+	int n_item = 1;
 
-    memset(array, 0, sizeof(U_64) * mod->n_col);
-    /* 条件为真,while括号里的也会跟着执行 */
-    while (strtok_next_item(item, mod->record, &pos)) {
-        if (!merge_one_string(array, mod->n_col, item, mod, n_item))
-            return 0;
-        n_item++;
-        memset(&item, 0, sizeof(item));
-    }
-    return 1;
+	memset(array, 0, sizeof(U_64) * mod->n_col);
+	while (strtok_next_item(item, mod->record, &pos)) {
+		if(!merge_one_string(array, mod->n_col, item, mod, n_item))
+			return 0;
+		n_item++;
+		memset(&item, 0, sizeof(item));
+	}
+	return 1;
 }

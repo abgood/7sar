@@ -206,6 +206,12 @@ int main (int argc, char **argv) {
             running_check(RUN_CHECK);
             break;
 #endif        
+        case RUN_CHECK_NEW:
+            if (reload_modules(conf.output_print_mod))
+                conf.print_mode = DATA_DETAIL;
+            disable_col_zero();
+            running_check(RUN_CHECK_NEW);
+            break;
     }
 
     return 0;
