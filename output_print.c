@@ -86,4 +86,14 @@ void running_check(int check_type) {
         fgets(line[1], LEN_10240, fp);
     }
 
+    /* 初始化mod->record的内存空间 */
+    init_module_fields();
+
+    /* 读日志文件倒数第二行到mod->record里 */
+    read_line_to_module_record(line[0]);
+    collect_record_stat();
+
+    /* 读日志文件倒数第二行到mod->record里 */
+    read_line_to_module_record(line[1]);
+    collect_record_stat();
 }
