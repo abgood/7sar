@@ -19,6 +19,7 @@ void running_check(int check_type) {
     FILE *fp;
     struct module *mod = NULL;
     double *st_array;
+    char tmp[9][LEN_256];
 
     if (0 != gethostname(host_name, sizeof(host_name)))
         do_debug(LOG_FATAL, "tsar -check: gethostname err, errno=%d\n", errno);
@@ -191,8 +192,29 @@ void running_check(int check_type) {
 
 #ifdef OLDTSAR
     /* --------------------------------RUN_CHECK----------------------------- */
+    /* run_check这里有问题,不用太纠结 */
     if (check_type == RUN_CHECK) {
-        printf("run_check\n");
+        for (i = 0; i < statis.total_mod_num; i++) {
+            mod = &mods[i];
+            if (!mod->enable)
+                continue;
+
+            if (!strcmp(mod->name, "mod_cpu")) {
+                memset(&tmp[1], 0, LEN_256);
+                for (j = 0; j < mod->n_col; j++) {
+                    st_array = &mod->st_array[j * mod->n_col];
+                    if (!st_array || !mod->st_flag)
+                        sprintf(tmp[1]," cpu=-");
+                    else
+                        sprintf(tmp[1]," cpu=%0.2f",st_array[5]);
+                }
+            }
+        }
+        for (j = 0; j < 9; j++)
+            strcat(check, tmp[j]);
+        printf("%s\n", check);
+        fclose(fp);
+        fp = NULL;
     }
 #endif
 }

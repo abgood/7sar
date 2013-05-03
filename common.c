@@ -71,6 +71,7 @@ int convert_record_to_array(U_64 *array, int l_array, char *record) {
             return i;
         token = strtok(NULL, DATA_SPLIT);
     }
+    return i;
 }
 
 /* mul-items merge one string */
