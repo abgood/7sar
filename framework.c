@@ -209,6 +209,13 @@ void realloc_module_array(struct module *mod, int n_n_item) {
 }
 
 /*
+ * set st result in st_array
+ */
+void set_st_record(struct module *mod) {
+
+}
+
+/*
  * 程序流程
  * 1.循环每个module
  * 2.得到mod->record中有多少项目
@@ -222,6 +229,7 @@ void realloc_module_array(struct module *mod, int n_n_item) {
 int collect_record_stat(void) {
     int i, n_item, ret, no_p_hdr = 1;
     struct module *mod = NULL;
+    U_64 *tmp;
 
     for (i = 0; i < statis.total_mod_num; i++) {
         mod = &mods[i];
@@ -250,13 +258,38 @@ int collect_record_stat(void) {
                     /* 合并模式下,合并多个项目 */
                     ret = merge_mult_item_to_array(mod->cur_array, mod);
                 } else { /* Not merge mode,merge mulitiply items*/
-                    ;
+                    char item[LEN_128] = {0};
+                    int num = 0;
+                    int pos = 0;
+
+                    while (strtok_next_item(item, mod->record, &pos)) {
+                        /* io: 前11位保存第一项数据,后11位保存第二项数据,依此类推 */
+                        if (!(ret = convert_record_to_array(&mod->cur_array[num * mod->n_col], mod->n_col, item)))
+                            break;
+                        memset(item, 0, sizeof(item));
+                        num++;
+                    }
                 }
             } else  /* one item */
                 ret = convert_record_to_array(mod->cur_array, mod->n_col, mod->record);
 
+            /* get st record */
+            if (no_p_hdr && mod->pre_flag && ret)
+                set_st_record(mod);
+
+            /* ret为假,mod->pre_flag也要为假 */
+            if (!ret)
+                mod->pre_flag = 0;
+            else
+                mod->pre_flag = 1;
+
         } else 
             mod->pre_flag = 0;
+
+        /* swap cur_array to pre_array */
+        tmp = mod->pre_array;
+        mod->pre_array = mod->cur_array;
+        mod->cur_array = tmp;
     }
 
 

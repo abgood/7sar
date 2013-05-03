@@ -26,7 +26,9 @@ int is_digit(char *str) {
     return 1;
 }
 
-/* convert record to mod->cur_array */
+/* convert record to the type of ull store in mod->cur_array 
+ * return: store in mod->cur_array numbers
+ */
 int convert_record_to_array(U_64 *array, int l_array, char *record) {
     int i = 0;
     char n_str[LEN_4096] = {0};
@@ -51,6 +53,38 @@ int convert_record_to_array(U_64 *array, int l_array, char *record) {
     return i;
 }
 
+/* mul-items merge one string */
+int merge_one_string(U_64 *array, int l_array, char *string, struct module *mod, int n_item) {
+    int i, len;
+    U_64 array_2[MAX_COL_NUM] = {0};
+    struct mod_info *info = mod->info;
+
+    if (!(len = convert_record_to_array(array_2, l_array, string)))
+        return 0;
+    /* 假如io参数需要合并
+     * sda 和 hdc
+     * 累加两个盘的前6位记录
+     * 平均值两个盘的后5位记录
+     */
+    for (i = 0; i < len; i++) {
+        switch (info[i].merge_mode) {
+            case MERGE_SUM:
+                /* 求和 */
+                array[i] += array_2[i];
+                break;
+            case MERGE_AVG:
+                /* 求平均值 */
+                array[i] = (array[i] * (n_item - 1) + array_2[i]) / n_item;
+                break;
+            default:
+                ;
+        }
+    }
+
+    return 1;
+}
+
+/* 把多项目内的记录每次copy至item里进行处理 */
 int strtok_next_item(char item[], char *record, int *start) {
     char *s_token, *e_token, *n_record;
 
@@ -77,6 +111,11 @@ int merge_mult_item_to_array(U_64 *array, struct module *mod) {
     /* 分配合并模式下的内存空间 */
     memset(array, 0, sizeof(U_64) * mod->n_col);
     while (strtok_next_item(item, mod->record, &pos)) {
-        printf("%s\n", item);
+        if (!merge_one_string(array, mod->n_col, item, mod, n_item))
+            return 0;
+        n_item++;
+        memset(&item, 0, sizeof(item));
     }
+
+    return 1;
 }
