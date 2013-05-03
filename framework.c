@@ -212,7 +212,63 @@ void realloc_module_array(struct module *mod, int n_n_item) {
  * set st result in st_array
  */
 void set_st_record(struct module *mod) {
+    int i, j, k = 0;
+    struct mod_info *info = mod->info;
+    mod->st_flag = 1;
 
+    for (i = 0; i < mod->n_item; i++) {
+        /* set module record by yourself */
+        if (mod->set_st_record) {
+            mod->set_st_record(mod, &mod->st_array[i * mod->n_col],
+                    &mod->pre_array[i * mod->n_col],
+                    &mod->cur_array[i * mod->n_col],
+                    conf.print_interval);
+        }
+
+        for (j = 0; j < mod->n_col; j++) {
+            /* 有set module record 不执行这里 */
+            if (!mod->set_st_record) {
+                printf("not set_cpu_record\n");
+                /* cur_array与pre_array保留最大的 */
+                switch (info[j].stats_opt) {
+                    case STATS_SUB:
+                        if (mod->cur_array[k] < mod->pre_array[k]) {
+                            mod->pre_array[k] = mod->cur_array[k];
+                            mod->st_flag = 0;
+                        } else
+                            mod->st_array[k] = mod->cur_array[k] - mod->pre_array[k];
+                        break;
+                    case STATS_SUB_INTER:
+                        if (mod->cur_array[k] < mod->pre_array[k]) {
+                            mod->pre_array[k] = mod->cur_array[k];
+                            mod->st_flag = 0;
+                        } else
+                            mod->st_array[k] = (mod->cur_array[k] - mod->pre_array[k]) / conf.print_interval;
+                        break;
+                    default:
+                        mod->st_array[k] = mod->cur_array[k];
+                }
+                mod->st_array[k] *= 1.0;
+            }
+
+            if (conf.print_tail) {
+                if (0 == mod->n_record)
+                    mod->max_array[k] = mod->mean_array[k] = mod->min_array[k] = mod->st_array[k] * 1.0;
+                else {
+                    if (mod->st_array[k] - mod->max_array[k] > 0.1)
+                        mod->max_array[k] = mod->st_array[k];
+                    if (mod->min_array[k] - mod->st_array[k] > 0.1 && mod->st_array[k] >= 0)
+                        mod->min_array[k] = mod->st_array[k];
+                    if (mod->st_array[k] >= 0)
+                        mod->mean_array[k] = ((mod->n_record - 1) * mod->mean_array[k] + mod->st_array[k]) / mod->n_record;
+                }
+            }
+
+            k++;
+        }
+    }
+
+    mod->n_record++;
 }
 
 /*
@@ -292,6 +348,35 @@ int collect_record_stat(void) {
         mod->cur_array = tmp;
     }
 
-
     return no_p_hdr;
+}
+
+/* 当module列数为0,则置module enable为0 */
+void disable_col_zero(void) {
+    struct module *mod = NULL;
+    int i, j;
+
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        if (!mod->enable)
+            continue;
+        if (!mod->enable)
+            mod->enable = 0;
+        else {
+            struct mod_info *info = mod->info;
+            int p_col = 0;
+
+            for (j = 0; j < mod->n_col; j++) {
+                if (((DATA_SUMMARY == conf.print_mode) && (SUMMARY_BIT == info[j].summary_bit))
+                        || ((DATA_DETAIL == conf.print_mode) && (HIDE_BIT != info[j].summary_bit))) {
+                    p_col++;
+                    break;
+                }
+            }
+
+            if (!p_col)
+                mod->enable = 0;
+
+        }
+    }
 }

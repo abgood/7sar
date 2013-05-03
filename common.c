@@ -28,7 +28,7 @@ int is_digit(char *str) {
 
 /* convert record to the type of ull store in mod->cur_array 
  * return: store in mod->cur_array numbers
- */
+ * 这个函数写的有问题,正确的见下面
 int convert_record_to_array(U_64 *array, int l_array, char *record) {
     int i = 0;
     char n_str[LEN_4096] = {0};
@@ -44,13 +44,33 @@ int convert_record_to_array(U_64 *array, int l_array, char *record) {
             return 0;
         if (i < l_array)
             *(array + i) = strtoull(token, NULL, 10);
-        token = strtok(NULL, DATA_SPLIT);
         i++;
+        token = strtok(NULL, DATA_SPLIT);
     }
     if (i != l_array)
         return 0;
 
     return i;
+}
+*/
+
+int convert_record_to_array(U_64 *array, int l_array, char *record) {
+    int i = 0;
+    char n_str[LEN_4096] = {0};
+    char *token;
+
+    if (!record || !strlen(record))
+        return 0;
+    memcpy(n_str, record, strlen(record));
+
+    token = strtok(n_str, DATA_SPLIT);
+    while (token) {
+        if (is_digit(token) && i < l_array - 1)
+            array[i++] = strtoull(token, NULL, 10);
+        else
+            return i;
+        token = strtok(NULL, DATA_SPLIT);
+    }
 }
 
 /* mul-items merge one string */
