@@ -8,5 +8,6 @@ int get_strtok_num(char *, char *);
 int merge_mult_item_to_array(U_64 *, struct module *);
 int strtok_next_item(char item[], char *, int *);
 int convert_record_to_array(U_64 *, int, char *);
+void get_mod_hdr(char [], struct module *);
 
 #endif

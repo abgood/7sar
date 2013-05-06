@@ -213,6 +213,19 @@ int main (int argc, char **argv) {
             disable_col_zero();
             running_check(RUN_CHECK_NEW);
             break;
+        case RUN_PRINT:
+            /* reload module by output_stdio_mod and output_print_mod */
+            reload_modules(conf.output_stdio_mod);
+            reload_modules(conf.output_print_mod);
+
+            /* disable module when n_col is zero */
+            disable_col_zero();
+
+            /* set conf.print_nline_interval */
+            conf.print_nline_interval = conf.print_interval;
+
+            running_print();
+            break;
     }
 
     return 0;
