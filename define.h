@@ -33,6 +33,7 @@
 #define PRINT_DATA_SPLIT "  "
 
 #define DEFAULT_PRINT_INTERVAL 5
+#define DEFAULT_PRINT_NUM 20
 
 #define VMSTAT "/proc/vmstat"
 #define STAT "/proc/stat"

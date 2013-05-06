@@ -498,12 +498,46 @@ FILE *init_running_print() {
     return fp;
 }
 
+int check_time(char *line) {
+    char *token, s_time[LEN_32] = {0};
+    long now_time = 0;
+    static long pre_time;
+
+    /* get record time */
+    token = strstr(line, SECTION_SPLIT);
+    memcpy(s_time, line, token - line);
+    now_time = atol(s_time);
+
+    if (now_time > conf.print_end_time)
+        return 3;
+    now_time = now_time - now_time % 60;
+    if (!((now_time - conf.print_start_time) % (60 * conf.print_nline_interval)) && now_time > pre_time) {
+        if (pre_time && now_time - pre_time == (60 * conf.print_nline_interval)) {
+            pre_time = now_time;
+            return 0;
+        }
+        pre_time = now_time;
+        return 1;
+    } else
+        return 1;
+}
+
+void print_record_time(long c_time) {
+    char s_time[LEN_32] = {0};
+    struct tm *t;
+
+    t = localtime(&c_time);
+    strftime(s_time, sizeof(s_time), "%d/%m/%y-%R", t);
+    printf("%s%s", s_time, PRINT_SEC_SPLIT);
+}
 
 /* print mode, print data from tsar.data */
 void running_print() {
     FILE *fp;
     char filename[LEN_128] = {0};
     char line[LEN_10240] = {0};
+    int print_num = 1, re_p_hdr = 0;
+    long n_record = 0, s_time;
 
     fp = init_running_print();
 
@@ -528,6 +562,28 @@ void running_print() {
             }
         }
 
-        // int k = check_time(line);
+        int k = check_time(line);
+        if (k == 1)
+            continue;
+        if (k == 3)
+            break;
+
+        read_line_to_module_record(line);
+
+        if (!(print_num % DEFAULT_PRINT_NUM) || re_p_hdr) {
+            print_header();
+            re_p_hdr = 0;
+            print_num = 1;
+        }
+
+        if (!(s_time = set_record_time(line)))
+            continue;
+
+        if (!collect_record_stat()) {
+            re_p_hdr = 1;
+            continue;
+        }
+
+        print_record_time(s_time);
     }
 }
