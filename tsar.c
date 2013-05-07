@@ -226,6 +226,19 @@ int main (int argc, char **argv) {
 
             running_print();
             break;
+        case RUN_PRINT_LIVE:
+            /* reload module by output_stdio_mod and output_print_mod */
+            reload_modules(conf.output_stdio_mod);
+            reload_modules(conf.output_print_mod);
+
+            /* disable module when n_col is zero */
+            disable_col_zero();
+            
+            running_print_live();
+            break;
+
+        default:
+            break;
     }
 
     return 0;

@@ -3,5 +3,6 @@
 
 void running_check(int);
 void running_print(void);
+void running_print_live(void);
 
 #endif

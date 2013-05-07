@@ -81,4 +81,11 @@ enum {
     MERGE_AVG
 };
 
+enum {
+    TAIL_NULL,
+    TAIL_MAX,
+    TAIL_MEAN,
+    TAIL_MIN
+};
+
 #endif

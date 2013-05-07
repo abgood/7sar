@@ -410,26 +410,29 @@ void print_header(void) {
     printf("%s", header);
 }
 
-/* set record time */
-long set_record_time(char *line) {
-    char *token, s_time[LEN_32] = {0};
-    static long pre_time, c_time = 0;
+/*
+ * set and print record time
+ */
+long set_record_time(char *line)
+{
+	char *token, s_time[LEN_32] = {0};
+	static long pre_time, c_time = 0;
 
-    /* get record time */
-    token = strtok(line, SECTION_SPLIT);
-    memcpy(s_time, line, token - line);
+	/* get record time */
+	token = strstr(line, SECTION_SPLIT);
+	memcpy(s_time, line, token - line);
 
-    /* swap time */
-    pre_time = c_time;
-    c_time = atol(s_time);
+	/* swap time */
+	pre_time = c_time;
+	c_time = atol(s_time);
 
-    c_time = c_time - c_time % 60;
-    pre_time = pre_time - pre_time % 60;
-
-    if (!(conf.print_interval = c_time - pre_time))
-        return 0;
-    else
-        return c_time;
+	c_time = c_time - c_time%60;
+	pre_time = pre_time - pre_time%60;
+	/* if skip record when two lines haveing same minute */
+	if (!(conf.print_interval = c_time - pre_time))
+		return 0;
+	else
+		return c_time;
 }
 
 FILE *init_running_print() {
@@ -531,6 +534,150 @@ void print_record_time(long c_time) {
     printf("%s%s", s_time, PRINT_SEC_SPLIT);
 }
 
+void printf_result(double result) {
+    if (conf.print_detail) {
+        printf("%6.2f", result);
+        printf("%s", PRINT_DATA_SPLIT);
+        return;
+    }
+    if ((1000 - result) > 0.1)
+        printf("%6.2f", result);
+	else if ( (1000 - result/1024) > 0.1) {
+		printf("%5.1f%s", result/1024, "K");
+	} else if ((1000 - result/1024/1024) > 0.1) {
+		printf("%5.1f%s", result/1024/1024, "M");
+	} else if ((1000 - result/1024/1024/1024) > 0.1) {
+		printf("%5.1f%s", result/1024/1024/1024, "G");
+	} else if ((1000 - result/1024/1024/1024/1024) > 0.1) {
+		printf("%5.1f%s", result/1024/1024/1024/1024, "T");
+	}
+	printf("%s", PRINT_DATA_SPLIT);
+}
+
+void print_array_stat(struct module *mod, double *st_array) {
+    int i;
+    struct mod_info *info = mod->info;
+
+    for (i = 0; i < mod->n_col; i++) {
+        if (mod->spec) {
+            if (!st_array || !mod->st_flag || st_array[i] < 0) {
+                if (((DATA_SUMMARY == conf.print_mode) && (SPEC_BIT == info[i].summary_bit))
+                        || ((DATA_DETAIL == conf.print_mode) && (SPEC_BIT == info[i].summary_bit)))
+                    printf("------%s", PRINT_DATA_SPLIT);
+            } else {
+                if (((DATA_SUMMARY == conf.print_mode) && (SPEC_BIT == info[i].summary_bit))
+                        || ((DATA_DETAIL == conf.print_mode) && (SPEC_BIT == info[i].summary_bit)))
+                    printf_result(st_array[i]);
+            }
+        } else {
+            if (!st_array || !mod->st_flag || st_array[i] < 0) {
+                if (((DATA_SUMMARY == conf.print_mode) && (SUMMARY_BIT == info[i].summary_bit))
+                        || ((DATA_DETAIL == conf.print_mode) && (HIDE_BIT != info[i].summary_bit)))
+                    printf("------%s", PRINT_DATA_SPLIT);
+            } else {
+                if (((DATA_SUMMARY == conf.print_mode) && (SUMMARY_BIT == info[i].summary_bit))
+                        || ((DATA_DETAIL == conf.print_mode) && (HIDE_BIT != info[i].summary_bit)))
+                    printf_result(st_array[i]);
+            }
+        }
+    }
+}
+
+void print_record(void) {
+    struct module *mod = NULL;
+    int i, j;
+    double *st_array;
+
+    /* print summary data */
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        if (!mod->enable)
+            continue;
+
+        if (!mod->n_item) {
+            print_array_stat(mod, NULL);
+            printf("%s", PRINT_SEC_SPLIT);
+        } else {
+            for (j = 0; j < mod->n_item; j++) {
+                st_array = &mod->st_array[j * mod->n_col];
+                print_array_stat(mod, st_array);
+                printf("%s", PRINT_SEC_SPLIT);
+            }
+            if (mod->n_item > 1)
+                printf("%s", PRINT_SEC_SPLIT);
+        }
+    }
+
+    printf("\n");
+}
+
+void print_tail(int tail_type) {
+    struct module *mod = NULL;
+    int i, j, k;
+    double *m_tail;
+
+    switch (tail_type) {
+        case TAIL_MAX:
+            printf("MAX           %s", PRINT_SEC_SPLIT);
+            break;
+        case TAIL_MEAN:
+            printf("MEAN          %s", PRINT_SEC_SPLIT);
+            break;
+        case TAIL_MIN:
+            printf("MIN           %s", PRINT_SEC_SPLIT);
+            break;
+        default:
+            return;
+    }
+
+    /* print summary data */
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        if (!mod->enable)
+            continue;
+
+        switch (tail_type) {
+            case TAIL_MAX:
+                m_tail = mod->max_array;
+                break;
+            case TAIL_MEAN:
+                m_tail = mod->mean_array;
+                break;
+            case TAIL_MIN:
+                m_tail = mod->min_array;
+                break;
+            default:
+                return;
+        }
+
+        k = 0;
+        for (j = 0; j < mod->n_item; j++) {
+            int i;
+            struct mod_info *info = mod->info;
+            for (i = 0; i < mod->n_col; i++) {
+                if (mod->spec) {
+                    if (((DATA_SUMMARY == conf.print_mode) && (SPEC_BIT == info[i].summary_bit))
+                            || ((DATA_DETAIL == conf.print_mode) && (SPEC_BIT == info[i].summary_bit)))
+                        printf_result(m_tail[k]);
+                } else {
+                    if (((DATA_SUMMARY == conf.print_mode) && (SUMMARY_BIT == info[i].summary_bit))
+                            || ((DATA_DETAIL == conf.print_mode) && (HIDE_BIT != info[i].summary_bit)))
+                        printf_result(m_tail[k]);
+                }
+                k++;
+            }
+            printf("%s", PRINT_SEC_SPLIT);
+        }
+
+        if (mod->n_item != 1) {
+            if (!m_tail)
+                print_array_stat(mod, NULL);
+            printf("%s", PRINT_SEC_SPLIT);
+        }
+    }
+    printf("\n");
+}
+
 /* print mode, print data from tsar.data */
 void running_print() {
     FILE *fp;
@@ -576,8 +723,9 @@ void running_print() {
             print_num = 1;
         }
 
-        if (!(s_time = set_record_time(line)))
-            continue;
+		/* exclued the two record have same time */
+		if (!(s_time = set_record_time(line)))
+			continue;
 
         if (!collect_record_stat()) {
             re_p_hdr = 1;
@@ -585,5 +733,24 @@ void running_print() {
         }
 
         print_record_time(s_time);
+        print_record();
+        n_record++;
+        print_num++;
+        memset(line, 0, sizeof(line));
     }
+
+    if (n_record) {
+        printf("\n");
+        print_tail(TAIL_MAX);
+        print_tail(TAIL_MEAN);
+        print_tail(TAIL_MIN);
+    }
+
+    fclose(fp);
+    fp = NULL;
+}
+
+/* running in print live mode */
+void running_print_live(void) {
+    printf("run live\n");
 }
