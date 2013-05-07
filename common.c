@@ -160,3 +160,75 @@ void get_mod_hdr(char hdr[], struct module *mod) {
         }
     }
 }
+
+int get_st_array_from_file(int have_collect) {
+    int i, ret = 0;
+    char line[LEN_10240] = {0};
+    char detail[LEN_1024] = {0};
+    char pre_line[LEN_10240] = {0};
+    struct module *mod;
+    FILE *fp;
+    char *s_token;
+    char pre_time[32] = {0};
+
+    /* 收集数据 */
+    if (!have_collect)
+        collect_record();
+
+    /* 合并模式 */
+    conf.print_merge = MERGE_ITEM;
+
+    sprintf(line, "%ld", statis.cur_time);
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        if (mod->enable && strlen(mod->record)) {
+            memset(&detail, 0, sizeof(detail));
+            sprintf(detail, "%s%s%s%s", SECTION_SPLIT, mod->opt_line, STRING_SPLIT, mod->record);
+            strcat(line, detail);
+        }
+    }
+
+    if (strlen(line))
+        strcat(line, "\n");
+
+    if ((fp = fopen(PRE_RECORD_FILE, "r"))) {
+        /* 无内容 */
+        if (!fgets(pre_line, LEN_10240, fp)) {
+            fclose(fp);
+            ret = -1;
+            goto out;
+        }
+    } else {
+        /* 无文件 */
+        ret = -1;
+        goto out;
+    }
+
+    s_token = strstr(pre_line, SECTION_SPLIT);
+    if (!s_token) {
+        ret = -1;
+        goto out;
+    }
+    memcpy(pre_time, pre_line, s_token - pre_line);
+    /* 时间相同 */
+    if (!(conf.print_interval = statis.cur_time - atol(pre_time)))
+        goto out;
+
+    read_line_to_module_record(pre_line);
+    init_module_fields();
+    collect_record_stat();
+
+    read_line_to_module_record(line);
+    collect_record_stat();
+    ret = 0;
+
+out:
+    if ((fp = fopen(PRE_RECORD_FILE, "w"))) {
+        strcat(line, "\n");
+        fputs(line, fp);
+        fclose(fp);
+        chmod(PRE_RECORD_FILE, 0666);
+    }
+
+    return ret;
+}
