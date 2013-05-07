@@ -179,6 +179,14 @@ void running_cron(void) {
         output_nagios();
 }
 
+void shut_down(void) {
+    free_modules();
+
+    memset(&conf, 0, sizeof(struct configure));
+    memset(&mods, 0, sizeof(struct module) * MAX_MOD_NUM);
+    memset(&statis, 0, sizeof(struct statistic));
+}
+
 int main (int argc, char **argv) {
 
     parse_config_file(DEFAULT_CONF_FILE_PATH);
@@ -241,5 +249,6 @@ int main (int argc, char **argv) {
             break;
     }
 
+    shut_down();
     return 0;
 }

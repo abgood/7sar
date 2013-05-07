@@ -54,5 +54,6 @@ int reload_modules(char *);
 void reload_check_modules(void);
 #endif
 void disable_col_zero(void);
+void free_modules(void);
 
 #endif

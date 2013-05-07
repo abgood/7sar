@@ -380,3 +380,33 @@ void disable_col_zero(void) {
         }
     }
 }
+
+/* free module info */
+void free_modules(void) {
+    int i;
+    struct module *mod;
+
+    for (i = 0; i < statis.total_mod_num; i++) {
+        mod = &mods[i];
+        if (mod->lib)
+            dlclose(mod->lib);
+
+        if (mod->cur_array) {
+            free(mod->cur_array);
+            free(mod->pre_array);
+            free(mod->st_array);
+            mod->cur_array = NULL;
+            mod->pre_array = NULL;
+            mod->st_array = NULL;
+        }
+
+        if (mod->max_array) {
+            free(mod->max_array);
+            free(mod->mean_array);
+            free(mod->min_array);
+            mod->max_array = NULL;
+            mod->mean_array = NULL;
+            mod->min_array = NULL;
+        }
+    }
+}

@@ -750,7 +750,52 @@ void running_print() {
     fp = NULL;
 }
 
+void print_current_time(void) {
+    char cur_time[LEN_32] = {0};
+    time_t timep;
+    struct tm *t;
+
+    time(&timep);
+    t = localtime(&timep);
+    if (conf.running_mode == RUN_PRINT_LIVE)
+        strftime(cur_time, sizeof(cur_time), "%d/%m/%y-%T", t);
+    else
+        strftime(cur_time, sizeof(cur_time), "%d/%m/%y-%R", t);
+    printf("%s%s", cur_time, PRINT_SEC_SPLIT);
+}
+
 /* running in print live mode */
 void running_print_live(void) {
-    printf("run live\n");
+    int print_num = 1, re_p_hdr = 0;
+
+    collect_record();
+
+    print_header();
+
+    init_module_fields();
+
+    if (collect_record_stat() == 0)
+        do_debug(LOG_INFO, "collect_record_stat warn\n");
+    sleep(conf.print_interval);
+
+    while (1) {
+        collect_record();
+
+        if (!(print_num % DEFAULT_PRINT_NUM) || re_p_hdr) {
+            print_header();
+            re_p_hdr = 0;
+            print_num = 1;
+        }
+
+        if (!collect_record_stat()) {
+            re_p_hdr = 1;
+            continue;
+        }
+
+        print_current_time();
+        print_record();
+
+        print_num++;
+        sleep(conf.print_interval);
+    }
 }
