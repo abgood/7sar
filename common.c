@@ -153,7 +153,7 @@ void get_mod_hdr(char hdr[], struct module *mod) {
                 pos += sprintf(hdr + pos, "%s%s", info[i].hdr, PRINT_DATA_SPLIT);
             }
         } else if (((DATA_SUMMARY == conf.print_mode) && (SUMMARY_BIT == info[i].summary_bit))
-                || ((DATA_DETAIL == conf.print_mode) && (HIDE_BIT == info[i].summary_bit))) {
+                || ((DATA_DETAIL == conf.print_mode) && (HIDE_BIT != info[i].summary_bit))) {
             if (strlen(info[i].hdr) > 6)
                 info[i].hdr[6] = '\0';
             pos += sprintf(hdr + pos, "%s%s", info[i].hdr, PRINT_DATA_SPLIT);
