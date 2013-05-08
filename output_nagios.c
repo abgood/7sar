@@ -85,9 +85,25 @@ void output_nagios(void) {
                             strcat(output, " ");
 
                             if (conf.cmin[l] != 0 && st_array[k] >= conf.cmin[l]) {
+                                if (conf.cmax[l] == 0 || (conf.cmax[l] != 0 && st_array[k] <= conf.cmax[l])) {
+                                    result = 2;
+                                    strcat(output_err, check_item);
+                                    strcat(output_err, "=");
+                                    strcat(output_err, value);
+                                    strcat(output_err, " ");
+                                    continue;
+                                }
                             }
 
                             if (conf.wmin[l] != 0 && st_array[k] >= conf.wmin[l]) {
+                                if (conf.wmax[l] == 0 || (conf.wmax[l] != 0 && st_array[k] <= conf.wmax[l])) {
+                                    if (result != 2)
+                                        result = 1;
+                                    strcat(output_err, check_item);
+                                    strcat(output_err, "=");
+                                    strcat(output_err, value);
+                                    strcat(output_err, " ");
+                                }
                             }
                         }
                     }
@@ -105,11 +121,8 @@ void output_nagios(void) {
 
     do_debug(LOG_DEBUG, "send to nagios:%s\n", nagios_cmd);
 
-    /*
     if (system(nagios_cmd) != 0)
         do_debug(LOG_WARN, "nsca run error:%s\n", nagios_cmd);
-    */
 
     printf("%s\n", nagios_cmd);
-    printf("%d\n", conf.mod_num);
 }
