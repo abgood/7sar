@@ -37,6 +37,7 @@
 
 #define VMSTAT "/proc/vmstat"
 #define STAT "/proc/stat"
+#define MEMINFO "/proc/meminfo"
 
 enum {
     HIDE_BIT,     /* 0 */
