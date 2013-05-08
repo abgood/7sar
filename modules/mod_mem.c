@@ -28,6 +28,7 @@ struct stats_mem {
 static void read_mem_stats(struct module *mod) {
     FILE *fp;
     char line[LEN_128];
+    char buf[LEN_4096];
     struct stats_mem st_mem;
     memset(&st_mem, 0, sizeof(struct stats_mem));
 
